@@ -1,24 +1,10 @@
 #!/usr/bin/env python
 
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
-from urllib.parse import parse_qsl
 import urllib.request
-import cgi
 import uuid
-import random
-import string
-from cgi import parse_header, parse_multipart
-import argparse
 import uuid
-import random
-import time
-import json
-import shutil
 import ssl
-import glob
 import os
-import base64
 import math
 
 from PIL import Image

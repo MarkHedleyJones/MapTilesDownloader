@@ -1,10 +1,8 @@
+#!/usr/bin/env python
+
 import sqlite3
 import os
-from os import listdir
-from os.path import isfile, join
-import multiprocessing
-from PIL import Image
-import io
+
 from utils import Utils
 
 class MbtilesWriter:

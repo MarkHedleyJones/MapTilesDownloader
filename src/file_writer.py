@@ -1,7 +1,6 @@
-import sqlite3
+#!/usr/bin/env python
+
 import os
-import multiprocessing
-import io
 import json
 import shutil
 
