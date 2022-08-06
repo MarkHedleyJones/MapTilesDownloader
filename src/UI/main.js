@@ -2,6 +2,8 @@ var mapView;
 
 $(function() {
 
+	var completed_requests = 0;
+
 	var map = null;
 	var draw = null;
 	var geocoder = null;
@@ -423,6 +425,31 @@ $(function() {
 		strip.prepend(image)
 	}
 
+
+	function finishRequests(numTiles) {
+		if(completed_requests < numTiles) {
+			console.log("Waiting for requests to finish ...")
+			setTimeout(function() {
+				finishRequests(numTiles);
+			}, 1000);
+		}
+		else {
+			console.log("Finished waiting for requests to finish!")
+			$.ajax({
+				url: "/end-download",
+				async: false,
+				timeout: 30 * 1000,
+				type: "post",
+				contentType: false,
+				processData: false,
+				dataType: 'json',
+			});
+			updateProgress(numTiles, numTiles);
+			logItemRaw("All requests are done");
+			$("#stop-button").html("FINISH");
+		}
+	}
+
 	async function startDownloading() {
 
 		if(draw.getAll().features.length == 0) {
@@ -446,7 +473,7 @@ $(function() {
 		var allTiles = getAllGridTiles();
 		updateProgress(0, allTiles.length);
 
-		var numThreads = parseInt($("#parallel-threads-box").val());
+		var minInterRequestPeriodMilliseconds = 1000.0 / parseFloat($("#request-frequency-box").val());
 		var outputDirectory = $("#output-directory-box").val();
 		var outputFile = $("#output-file-box").val();
 		var outputType = $("#output-type").val();
@@ -481,95 +508,83 @@ $(function() {
 		})
 
 		let i = 0;
-		var iterator = async.eachLimit(allTiles, numThreads, function(item, done) {
 
-			if(cancellationToken) {
-				return;
-			}
+		var start_time = new Date();
+		completed_requests = 0;
 
-			var boxLayer = previewRect(item);
+		// Start making requests 500ms from now (allow for setup)
+		var request_time = start_time.getMilliseconds() + 500;
 
-			var url = "/download-tile";
-
-			var data = new FormData();
-			data.append('x', item.x)
-			data.append('y', item.y)
-			data.append('z', item.z)
-			data.append('quad', generateQuadKey(item.x, item.y, item.z))
-			data.append('outputDirectory', outputDirectory)
-			data.append('outputFile', outputFile)
-			data.append('outputType', outputType)
-			data.append('outputScale', outputScale)
-			data.append('timestamp', timestamp)
-			data.append('source', source)
-			data.append('bounds', boundsArray.join(","))
-			data.append('center', centerArray.join(","))
-
-			var request = $.ajax({
-				"url": url,
-				async: true,
-				timeout: 30 * 1000,
-				type: "post",
-			    contentType: false,
-			    processData: false,
-				data: data,
-				dataType: 'json',
-			}).done(function(data) {
+		for ( const item of allTiles ) {
+			setTimeout(function() {
 
 				if(cancellationToken) {
 					return;
 				}
 
-				if(data.code == 200) {
-					showTinyTile(data.image)
-					logItem(item.x, item.y, item.z, data.message);
-				} else {
-					logItem(item.x, item.y, item.z, data.code + " Error downloading tile");
-				}
+				var boxLayer = previewRect(item);
 
-			}).fail(function(data, textStatus, errorThrown) {
+				var url = "/download-tile";
 
-				if(cancellationToken) {
-					return;
-				}
+				var data = new FormData();
+				data.append('x', item.x)
+				data.append('y', item.y)
+				data.append('z', item.z)
+				data.append('quad', generateQuadKey(item.x, item.y, item.z))
+				data.append('outputDirectory', outputDirectory)
+				data.append('outputFile', outputFile)
+				data.append('outputType', outputType)
+				data.append('outputScale', outputScale)
+				data.append('timestamp', timestamp)
+				data.append('source', source)
+				data.append('bounds', boundsArray.join(","))
+				data.append('center', centerArray.join(","))
 
-				logItem(item.x, item.y, item.z, "Error while relaying tile");
-				//allTiles.push(item);
+				$.ajax({
+					"url": url,
+					async: false,
+					timeout: 30 * 1000,
+					type: "post",
+						contentType: false,
+						processData: false,
+					data: data,
+					dataType: 'json',
+				}).done(function(data) {
 
-			}).always(function(data) {
-				i++;
+					if(cancellationToken) {
+						return;
+					}
 
-				removeLayer(boxLayer);
-				updateProgress(i, allTiles.length);
+					if(data.code == 200) {
+						showTinyTile(data.image)
+						logItem(item.x, item.y, item.z, data.message);
+					} else {
+						logItem(item.x, item.y, item.z, data.code + " Error downloading tile");
+					}
 
-				done();
+				}).fail(function(data, textStatus, errorThrown) {
 
-				if(cancellationToken) {
-					return;
-				}
-			});
+					if(cancellationToken) {
+						return;
+					}
 
-			requests.push(request);
+					logItem(item.x, item.y, item.z, "Error while relaying tile");
+					//allTiles.push(item);
 
-		}, async function(err) {
-
-			var request = await $.ajax({
-				url: "/end-download",
-				async: true,
-				timeout: 30 * 1000,
-				type: "post",
-				contentType: false,
-				processData: false,
-				data: data,
-				dataType: 'json',
-			})
-
-			updateProgress(allTiles.length, allTiles.length);
-			logItemRaw("All requests are done");
-
-			$("#stop-button").html("FINISH");
-		});
-
+				}).always(function(data) {
+					completed_requests += 1;
+					removeLayer(boxLayer);
+					updateProgress(i, allTiles.length);
+					if(cancellationToken) {
+						return;
+					}
+				});
+			} , request_time);
+			request_time += minInterRequestPeriodMilliseconds;
+		}
+		setTimeout(function() {
+			finishRequests(allTiles.length);
+		} , request_time);
 	}
 
 	function updateProgress(value, total) {
