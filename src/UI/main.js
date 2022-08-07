@@ -462,6 +462,60 @@ $(function() {
 		cancellationToken = false;
 		requests = [];
 
+		var timestamp = Date.now().toString();
+		var allTiles = getAllGridTiles();
+
+		var minInterRequestPeriodMilliseconds = 1000.0 / parseFloat($("#request-frequency-box").val());
+		var outputDirectory = $("#output-directory-box").val();
+		var outputFile = $("#output-file-box").val();
+		var outputType = $("#output-type").val();
+		var outputScale = $("#output-scale").val();
+		var source = $("#source-box").val()
+
+		tile_keys = [];
+		for(var i = 0; i < allTiles.length; i++) {
+			tile_keys.push({
+				x: allTiles[i].x,
+				y: allTiles[i].y,
+				z: allTiles[i].z,
+				quad: generateQuadKey(allTiles[i].x, allTiles[i].y, allTiles[i].z)
+			});
+		}
+		var data1 = new FormData();
+		data1.append('outputDirectory', outputDirectory)
+		data1.append('outputFile', outputFile)
+		data1.append('timestamp', timestamp)
+		data1.append('outputType', outputType)
+		data1.append('tiles', JSON.stringify(tile_keys));
+		data1.append('outputScale', outputScale)
+
+		var requiredTiles = [];
+		$.ajax({
+			url: "/init-download",
+			async: false,
+			timeout: 30 * 1000,
+			type: "post",
+			processData: false,
+			contentType: false,
+			data: data1,
+			dataType: 'json',
+		}).done(function(data) {
+			required_tile_indices = data["required-tile-indices"];
+			for (var i = 0; i < required_tile_indices.length; i++) {
+				console.log("Tile index: " + required_tile_indices[i]);
+				requiredTiles.push(allTiles[required_tile_indices[i]]);
+			}
+		}).fail(function(data, textStatus, errorThrown) {
+			M.toast({html: 'An error occurred while checking for existing tiles', displayLength: 3000})
+			return;
+		});
+
+
+		if (requiredTiles.length == 0) {
+			M.toast({html: 'All tiles in the requested range already exist in the output folder.', displayLength: 3000})
+			return;
+		}
+
 		$("#main-sidebar").hide();
 		$("#download-sidebar").show();
 		$(".tile-strip").html("");
@@ -470,17 +524,7 @@ $(function() {
 		clearLogs();
 		M.Toast.dismissAll();
 
-		var timestamp = Date.now().toString();
-
-		var allTiles = getAllGridTiles();
-		updateProgress(0, allTiles.length);
-
-		var minInterRequestPeriodMilliseconds = 1000.0 / parseFloat($("#request-frequency-box").val());
-		var outputDirectory = $("#output-directory-box").val();
-		var outputFile = $("#output-file-box").val();
-		var outputType = $("#output-type").val();
-		var outputScale = $("#output-scale").val();
-		var source = $("#source-box").val()
+		updateProgress(0, requiredTiles.length);
 
 		var bounds = getBounds();
 		var boundsArray = [bounds.getSouthWest().lng, bounds.getSouthWest().lat, bounds.getNorthEast().lng, bounds.getNorthEast().lat]
@@ -498,9 +542,9 @@ $(function() {
 		data.append('bounds', boundsArray.join(","))
 		data.append('center', centerArray.join(","))
 
-		var request = await $.ajax({
+		$.ajax({
 			url: "/start-download",
-			async: true,
+			async: false,
 			timeout: 30 * 1000,
 			type: "post",
 			contentType: false,
@@ -509,7 +553,7 @@ $(function() {
 			dataType: 'json',
 		})
 
-		let i = 0;
+		// let i = 0;
 
 		var start_time = new Date();
 		completed_requests = 0;
@@ -517,7 +561,7 @@ $(function() {
 		// Start making requests 500ms from now (allow for setup)
 		var request_time = start_time.getMilliseconds() + 500;
 
-		for ( const item of allTiles ) {
+		for ( const item of requiredTiles ) {
 			setTimeout(function() {
 
 				if(cancellationToken) {
@@ -543,12 +587,12 @@ $(function() {
 				data.append('center', centerArray.join(","))
 
 				$.ajax({
-					"url": url,
+					url: url,
 					async: false,
 					timeout: 30 * 1000,
 					type: "post",
-						contentType: false,
-						processData: false,
+					contentType: false,
+					processData: false,
 					data: data,
 					dataType: 'json',
 				}).done(function(data) {
@@ -571,12 +615,11 @@ $(function() {
 					}
 
 					logItem(item.x, item.y, item.z, "Error while relaying tile");
-					//allTiles.push(item);
 
 				}).always(function(data) {
 					completed_requests += 1;
 					removeLayer(boxLayer);
-					updateProgress(i, allTiles.length);
+					updateProgress(completed_requests, requiredTiles.length);
 					if(cancellationToken) {
 						return;
 					}
@@ -585,17 +628,39 @@ $(function() {
 			request_time += minInterRequestPeriodMilliseconds;
 		}
 		setTimeout(function() {
-			finishRequests(allTiles.length);
+			finishRequests(requiredTiles.length);
 		} , request_time);
 	}
 
 	function updateProgress(value, total) {
-		var progress = value / total;
+		const progress = value / total;
+		const total_time_remaining_seconds = (1.0-progress) * total * (1.0 / parseFloat($("#request-frequency-box").val()));
+		const time_remaining_hours = Math.floor(total_time_remaining_seconds / 3600.0);
+		const time_remaining_minutes = Math.floor((total_time_remaining_seconds - time_remaining_hours * 3600.0) / 60.0);
+		const time_remaining_seconds = Math.floor(total_time_remaining_seconds - time_remaining_hours * 3600.0 - time_remaining_minutes * 60);
 
 		bar.animate(progress);
 		bar.setText(Math.round(progress * 100) + '<span>%</span>');
 
-		$("#progress-subtitle").html(value.toLocaleString() + " <span>out of</span> " + total.toLocaleString())
+		$("#progress-subtitle").html(value.toLocaleString() + " <span>out of</span> " + total.toLocaleString());
+		var out = "<span>Approx:</span> ";
+		if(time_remaining_hours > 0) {
+			out += time_remaining_hours + " <span>hour(s) and</span> ";
+			if (time_remaining_minutes > 0) {
+				out += time_remaining_minutes + " <span>minute(s)</span> "
+			}
+		} else if(time_remaining_minutes > 0) {
+			out += time_remaining_minutes + " <span>minute(s) and</span> ";
+			if (time_remaining_seconds > 0) {
+				out += time_remaining_seconds + " <span>second(s)</span> "
+			}
+		} else if (time_remaining_seconds > 0) {
+			out += time_remaining_seconds + " <span>second(s)</span> "
+		}
+		else {
+			out += "<span>less than a second</span>";
+		}
+		$("#progress-time-remaining").html(out);
 	}
 
 	function logItem(x, y, z, text) {

@@ -70,7 +70,6 @@ class serverHandler(BaseHTTPRequestHandler):
 
             result = {}
             filePath = os.path.join("output", outputDirectory, outputFile)
-            print("\n")
 
             if self.writerByType(outputType).exists(filePath, x, y, z):
                 result["code"] = 200
@@ -106,6 +105,52 @@ class serverHandler(BaseHTTPRequestHandler):
                 else:
                     result["message"] = "Download failed"
 
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode("utf-8"))
+            return
+
+        elif parts.path == "/init-download":
+            tiles = json.loads(str(postvars["tiles"][0]))
+            required_tile_indices = []
+
+            timestamp = int(postvars["timestamp"][0])
+            outputDirectoryTemplate = str(postvars["outputDirectory"][0])
+            outputFileTemplate = str(postvars["outputFile"][0])
+            outputType = str(postvars["outputType"][0])
+            outputScale = int(postvars["outputScale"][0])
+
+            for index, tile in enumerate(tiles):
+                x = int(tile["x"])
+                y = int(tile["y"])
+                z = int(tile["z"])
+                replaceMap = {
+                    "x": str(x),
+                    "y": str(y),
+                    "z": str(z),
+                    "quad": str(tile["quad"]),
+                    "timestamp": str(timestamp),
+                }
+
+                outputDirectory = outputDirectoryTemplate
+                outputFile = outputFileTemplate
+
+                for key, value in replaceMap.items():
+                    newKey = str("{" + str(key) + "}")
+                    outputDirectory = outputDirectory.replace(newKey, value)
+                    outputFile = outputFile.replace(newKey, value)
+
+                filePath = os.path.join("output", outputDirectory, outputFile)
+                if not self.writerByType(outputType).exists(filePath, x, y, z):
+                    print("ADD: " + filePath)
+                    required_tile_indices.append(index)
+                else:
+                    print("EXISTS: " + filePath)
+
+            result = {}
+            result["code"] = 200
+            result["required-tile-indices"] = required_tile_indices
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
