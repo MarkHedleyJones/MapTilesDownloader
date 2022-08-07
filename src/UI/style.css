@@ -1,7 +1,8 @@
-html, body {
+html,
+body {
 	height: 100%;
 	margin: 0px;
-	padding: 0px; 
+	padding: 0px;
 	font-family: 'Open Sans';
 	overflow: hidden;
 }
@@ -26,8 +27,8 @@ html, body {
 	overflow-y: auto;
 }
 
-.sidebar > .sidebar-section {
-	margin-left:40px;
+.sidebar>.sidebar-section {
+	margin-left: 40px;
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;
 	width: calc(100% - 40px);
@@ -100,12 +101,12 @@ hr {
 }
 
 .input-field {
-    /*margin-top: 0.25rem;*/
-    /*margin-bottom: 0.25rem;*/
+	/*margin-top: 0.25rem;*/
+	/*margin-bottom: 0.25rem;*/
 }
 
 .row {
-    margin-bottom: 5px;
+	margin-bottom: 5px;
 }
 
 #sources {
