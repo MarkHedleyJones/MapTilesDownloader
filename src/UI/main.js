@@ -53,8 +53,8 @@ $(function() {
 		map = new mapboxgl.Map({
 			container: 'map-view',
 			style: 'mapbox://styles/aliashraf/ck6lw9nr80lvo1ipj8zovttdx',
-			center: [-73.983652, 40.755024],
-			zoom: 12
+			center: [130.6700, 33.5437],
+			zoom: 9
 		});
 
 		geocoder = new MapboxGeocoder({ accessToken: mapboxgl.accessToken });
@@ -237,11 +237,33 @@ $(function() {
 		return polygon;
 	}
 
+	function getFeatures() {
+		return {
+			geometry: {
+				coordinates: [
+					[
+						[ 130.02373937928246, 33.9772723424736 ],
+						[ 131.19927648864893, 33.9772723424736 ],
+						[ 131.19927648864893, 32.99573295810467 ],
+						[ 130.02373937928246, 32.99573295810467 ],
+						[ 130.02373937928246, 33.9772723424736 ],
+					],
+				],
+				type: "Polygon",
+			},
+			id: "e03d18146060b91ba47126b62deb528f",
+			properties: {
+			},
+			type: "Feature",
+		}
+	}
+
 	function isTileInSelection(tileRect) {
 
 		var polygon = getPolygonByBounds(tileRect);
 
-		var areaPolygon = draw.getAll().features[0];
+		// var areaPolygon = draw.getAll().features[0];;
+		var areaPolygon = getFeatures();
 
 		if(turf.booleanDisjoint(polygon, areaPolygon) == false) {
 			return true;
@@ -252,7 +274,8 @@ $(function() {
 
 	function getBounds() {
 
-		var coordinates = draw.getAll().features[0].geometry.coordinates[0];
+		// var coordinates = draw.getAll().features[0].geometry.coordinates[0];
+		var coordinates = getFeatures().geometry.coordinates[0];
 
 		var bounds = coordinates.reduce(function(bounds, coord) {
 			return bounds.extend(coord);
@@ -456,10 +479,11 @@ $(function() {
 
 	async function startDownloading() {
 
-		if(draw.getAll().features.length == 0) {
-			M.toast({html: 'You need to select a region first.', displayLength: 3000})
-			return;
-		}
+
+		// if(draw.getAll().features.length == 0) {
+		// 	M.toast({html: 'You need to select a region first.', displayLength: 3000})
+		// 	return;
+		// }
 
 		cancellationToken = false;
 		requests = [];
