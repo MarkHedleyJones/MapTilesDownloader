@@ -120,13 +120,15 @@ $(function() {
 
 	}
 
-	function initializeRectangleTool() {
-
-		var modes = MapboxDraw.modes;
-		modes.draw_rectangle = DrawRectangle.default;
-
-		draw = new MapboxDraw({
-			modes: modes
+	function initializePolygonTool() {
+		draw = new MapboxDraw(
+		{
+			displayControlsDefault: false,
+			controls: {
+				polygon: true,
+				trash: true
+			},
+			defaultMode: 'draw_polygon'
 		});
 		map.addControl(draw);
 
@@ -134,7 +136,7 @@ $(function() {
 			M.Toast.dismissAll();
 		});
 
-		$("#rectangle-draw-button").click(function() {
+		$("#boundary-draw-button").click(function() {
 			startDrawing();
 		})
 
@@ -143,10 +145,10 @@ $(function() {
 	function startDrawing() {
 		removeGrid();
 		draw.deleteAll();
-		draw.changeMode('draw_rectangle');
+		draw.changeMode('draw_polygon');
 
 		M.Toast.dismissAll();
-		M.toast({html: 'Click two points on the map to make a rectangle.', displayLength: 7000})
+		M.toast({html: 'Select an area to download', displayLength: 7000})
 	}
 
 	function initializeGridPreview() {
@@ -636,7 +638,7 @@ $(function() {
 	initializeSources();
 	initializeMap();
 	initializeSearch();
-	initializeRectangleTool();
+	initializePolygonTool();
 	initializeGridPreview();
 	initializeMoreOptions();
 	initializeDownloader();
