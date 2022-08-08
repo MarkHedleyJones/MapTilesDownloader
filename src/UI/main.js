@@ -52,7 +52,7 @@ $(function() {
 
 		map = new mapboxgl.Map({
 			container: 'map-view',
-			style: 'mapbox://styles/aliashraf/ck6lw9nr80lvo1ipj8zovttdx',
+			style: 'mapbox://styles/mapbox/light-v10',
 			center: [130.6700, 33.5437],
 			zoom: 9
 		});
