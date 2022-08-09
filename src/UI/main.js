@@ -174,8 +174,33 @@ $(function() {
 		M.toast({html: 'Select an area to download', displayLength: 7000})
 	}
 
+
+	function zoomMapTo(level) {
+		map.setZoom(level);
+	}
 	function initializeGridPreview() {
 		$("#grid-preview-button").click(previewGrid);
+		$("#map-zoom-0").click(function() { zoomMapTo(0); });
+		$("#map-zoom-1").click(function() { zoomMapTo(1); });
+		$("#map-zoom-2").click(function() { zoomMapTo(2); });
+		$("#map-zoom-3").click(function() { zoomMapTo(3); });
+		$("#map-zoom-4").click(function() { zoomMapTo(4); });
+		$("#map-zoom-5").click(function() { zoomMapTo(5); });
+		$("#map-zoom-6").click(function() { zoomMapTo(6); });
+		$("#map-zoom-7").click(function() { zoomMapTo(7); });
+		$("#map-zoom-8").click(function() { zoomMapTo(8); });
+		$("#map-zoom-9").click(function() { zoomMapTo(9); });
+		$("#map-zoom-10").click(function() { zoomMapTo(10); });
+		$("#map-zoom-11").click(function() { zoomMapTo(11); });
+		$("#map-zoom-12").click(function() { zoomMapTo(12); });
+		$("#map-zoom-13").click(function() { zoomMapTo(13); });
+		$("#map-zoom-14").click(function() { zoomMapTo(14); });
+		$("#map-zoom-15").click(function() { zoomMapTo(15); });
+		$("#map-zoom-16").click(function() { zoomMapTo(16); });
+		$("#map-zoom-17").click(function() { zoomMapTo(17); });
+		$("#map-zoom-18").click(function() { zoomMapTo(18); });
+		$("#map-zoom-19").click(function() { zoomMapTo(19); });
+		$("#map-zoom-20").click(function() { zoomMapTo(20); });
 
 		map.on('click', showTilePopup);
 	}
