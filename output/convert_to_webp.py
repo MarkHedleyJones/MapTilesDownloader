@@ -23,7 +23,9 @@ def convert_to_webp(input_dir, output_dir):
                     .replace(".jpg", ".webp")
                     .replace(".png", ".webp")
                 )
-                if not os.path.exists(os.path.dirname(output_path)):
+                if os.path.exists(output_path):
+                    continue
+                elif not os.path.exists(os.path.dirname(output_path)):
                     os.makedirs(os.path.dirname(output_path))
                 try:
                     img = Image.open(os.path.join(root, file))
