@@ -50,41 +50,41 @@ $(function() {
 		mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpYXNocmFmIiwiYSI6ImNqdXl5MHV5YTAzNXI0NG51OWFuMGp4enQifQ.zpd2gZFwBTRqiapp1yci9g';
 		map = new mapboxgl.Map({
 			container: 'map-view',
-			style: 'mapbox://styles/mapbox/light-v10',
-			// style: {
-			// 	"version": 8,
-			// 	"sources": {
-			// 		"osm": {
-			// 			"type": "raster",
-			// 			"tiles": [
-			// 				"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-			// 				"http://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-			// 				"http://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
-			// 			],
-			// 			"tileSize": 256,
-			// 			"attribution": "OpenStreetMap"
-			// 		},
-			// 		"transport-map": {
-			// 			"type": "raster",
-			// 			"tiles": [
-			// 				"https://a.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38",
-			// 				"https://b.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38",
-			// 				"https://c.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38"
-			// 			],
-			// 			"tileSize": 256,
-			// 			"attribution": "OpenStreetMap"
-			// 		},
-			// 	},
-			// 	'layers': [
-			// 		{
-			// 			'id': 'simple-tiles',
-			// 			'type': 'raster',
-			// 			'source': 'osm',
-			// 			'minzoom': 0,
-			// 			'maxzoom': 22
-			// 		}
-			// 	]
-			// },
+			// style: 'mapbox://styles/mapbox/light-v10',
+			style: {
+				"version": 8,
+				"sources": {
+					"osm": {
+						"type": "raster",
+						"tiles": [
+							"http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+							"http://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+							"http://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+						],
+						"tileSize": 256,
+						"attribution": "OpenStreetMap"
+					},
+					"transport-map": {
+						"type": "raster",
+						"tiles": [
+							"https://a.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38",
+							"https://b.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38",
+							"https://c.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=6170aad10dfd42a38d4d8c709a536f38"
+						],
+						"tileSize": 256,
+						"attribution": "OpenStreetMap"
+					},
+				},
+				'layers': [
+					{
+						'id': 'simple-tiles',
+						'type': 'raster',
+						'source': 'transport-map',
+						'minzoom': 0,
+						'maxzoom': 22
+					}
+				]
+			},
 			center: [130.6700, 33.5437],
 			zoom: 9
 		});
